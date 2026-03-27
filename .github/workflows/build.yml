@@ -41,8 +41,7 @@ jobs:
         install: >-
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-ninja
-          make
+          mingw-w64-x86_64-make
 
     # ── 3. Configure with CMake ─────────────────────────────
     - name: CMake Configure
@@ -53,7 +52,8 @@ jobs:
         cmake .. \
           -G "MinGW Makefiles" \
           -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_TESTS=ON
+          -DBUILD_TESTS=ON \
+          -DFETCHCONTENT_QUIET=OFF
 
     # ── 4. Build ────────────────────────────────────────────
     - name: Build
