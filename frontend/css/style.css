@@ -1,0 +1,154 @@
+/* ─────────────────────────────────────────────────────────
+   Interview Scheduler – Global Styles
+   ───────────────────────────────────────────────────────── */
+
+/* Base */
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #f4f6fb;
+  color: #1e293b;
+}
+
+/* ── Navbar tweaks ─────────────────────────────────────── */
+.navbar { min-height: 58px; }
+.navbar-brand { font-size: 1.1rem; letter-spacing: .02em; }
+
+/* ── Cards ─────────────────────────────────────────────── */
+.card { transition: box-shadow .15s; }
+.card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.09) !important; }
+
+/* ── Notification Panel ─────────────────────────────────── */
+.notif-panel {
+  position: fixed;
+  top: 62px;
+  right: 12px;
+  width: 360px;
+  max-height: 480px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  z-index: 1050;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.notif-list {
+  overflow-y: auto;
+  flex: 1;
+}
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: .875rem;
+  cursor: default;
+  transition: background .1s;
+}
+.notif-item:hover { background: #f8fafc; }
+.notif-item.unread { background: #eff6ff; }
+.notif-item.unread:hover { background: #dbeafe; }
+.notif-item .notif-time {
+  font-size: .75rem;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* ── Slot cards in list view ───────────────────────────── */
+.slot-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+  transition: all .15s;
+  cursor: pointer;
+}
+.slot-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59,130,246,.15);
+}
+.slot-card .slot-time { font-size: .825rem; color: #475569; }
+.slot-card .slot-interviewer { font-weight: 600; }
+.slot-card .slot-skills { font-size: .75rem; color: #64748b; }
+.slot-card .btn-book {
+  font-size: .8rem;
+  padding: 3px 10px;
+}
+
+/* My slots list */
+.my-slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: .875rem;
+}
+.my-slot-item:last-child { border-bottom: none; }
+.my-slot-item .slot-status { font-size: .75rem; }
+
+/* ── KPI cards ─────────────────────────────────────────── */
+.kpi-card { transition: transform .15s; }
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-icon { font-size: 1.8rem; }
+.kpi-blue  .kpi-icon { color: #3b82f6; }
+.kpi-green .kpi-icon { color: #10b981; }
+.kpi-yellow .kpi-icon { color: #f59e0b; }
+.kpi-red   .kpi-icon { color: #ef4444; }
+
+/* ── Utilization bar ───────────────────────────────────── */
+.util-bar { height: 8px; border-radius: 4px; overflow: hidden; background: #e2e8f0; }
+.util-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+
+/* ── Slots list container ──────────────────────────────── */
+.slots-list { max-height: 360px; overflow-y: auto; }
+.min-height-60 { min-height: 60px; }
+
+/* ── Calendar customisation ────────────────────────────── */
+.fc .fc-toolbar-title { font-size: 1rem; font-weight: 700; }
+.fc .fc-button { border-radius: 6px !important; font-size: .8rem !important; }
+.fc .fc-button-primary {
+  background-color: #3b82f6 !important;
+  border-color: #2563eb !important;
+}
+.fc .fc-button-primary:hover {
+  background-color: #2563eb !important;
+}
+.fc-event { border-radius: 5px !important; font-size: .78rem !important; cursor: pointer; }
+.fc-daygrid-event-dot { display: none; }
+.fc-event-title { font-weight: 600; }
+
+/* ── Badge status ──────────────────────────────────────── */
+.status-confirmed { background: #dbeafe; color: #1d4ed8; }
+.status-completed  { background: #d1fae5; color: #065f46; }
+.status-declined   { background: #fee2e2; color: #991b1b; }
+.status-available  { background: #d1fae5; color: #065f46; }
+.status-blocked    { background: #fef3c7; color: #92400e; }
+
+/* ── Table tweaks ──────────────────────────────────────── */
+.table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+.table tbody tr:hover { background-color: #f8fafc; }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .notif-panel { width: calc(100vw - 24px); right: 12px; }
+  .kpi-card .h2 { font-size: 1.5rem; }
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+.slots-list::-webkit-scrollbar,
+.notif-list::-webkit-scrollbar { width: 4px; }
+.slots-list::-webkit-scrollbar-thumb,
+.notif-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1; border-radius: 2px;
+}
+
+/* ── Detail info rows ─────────────────────────────────── */
+.detail-row {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: .9rem;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: #64748b; min-width: 120px; font-weight: 600; }

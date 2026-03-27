@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interviewer Dashboard – Interview Scheduler</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+  <div class="container-fluid px-4">
+    <span class="navbar-brand fw-bold"><i class="bi bi-calendar-check me-2"></i>Interview Scheduler <span id="appVersion" class="badge bg-secondary fw-normal ms-1" style="font-size:0.6rem;vertical-align:middle;"></span></span>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <span class="badge bg-light text-success fw-semibold"><i class="bi bi-person-circle me-1"></i><span id="navName"></span></span>
+      <button class="btn btn-sm btn-outline-light position-relative" id="notifBtn">
+        <i class="bi bi-bell"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge"></span>
+      </button>
+      <button class="btn btn-sm btn-outline-light" id="profileBtn" title="Edit Profile"><i class="bi bi-person-circle"></i></button>
+      <button class="btn btn-sm btn-outline-warning" id="changePwBtn" title="Change Password"><i class="bi bi-key"></i></button>
+      <button class="btn btn-sm btn-outline-light" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </div>
+  </div>
+</nav>
+
+<!-- NOTIFICATION PANEL -->
+<div id="notifPanel" class="notif-panel shadow d-none">
+  <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+    <strong>Notifications</strong>
+    <button class="btn btn-sm btn-link text-muted" id="markAllReadBtn">Mark all read</button>
+  </div>
+  <div id="notifList" class="notif-list"></div>
+</div>
+
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <!-- LEFT: Skills + Add Slot -->
+    <div class="col-xl-4 col-lg-5">
+
+      <!-- My Skills -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0"><i class="bi bi-tags text-success me-2"></i>My Skills</h5>
+          <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#skillModal">
+            <i class="bi bi-plus-lg"></i> Add
+          </button>
+        </div>
+        <div class="card-body px-4">
+          <div id="skillsList" class="d-flex flex-wrap gap-2 min-height-60">
+            <span class="text-muted small">Loading…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Availability Slot -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h5 class="fw-bold mb-0"><i class="bi bi-plus-square text-success me-2"></i>Add Availability Slot</h5>
+        </div>
+        <div class="card-body px-4">
+          <div id="slotFormError" class="alert alert-danger d-none"></div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Start Date & Time</label>
+            <input type="datetime-local" class="form-control" id="slotStart" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">End Date & Time</label>
+            <input type="datetime-local" class="form-control" id="slotEnd" />
+          </div>
+          <button class="btn btn-success w-100" id="addSlotBtn">
+            <span id="slotSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+            <i class="bi bi-plus-circle me-1"></i> Add Slot
+          </button>
+        </div>
+      </div>
+
+      <!-- My Upcoming Slots Summary -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0"><i class="bi bi-list-ul text-success me-2"></i>My Slots</h5>
+          <span class="badge bg-success" id="slotsCount">0</span>
+        </div>
+        <div class="card-body px-3">
+          <div id="mySlotsList" class="slots-list"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Calendar -->
+    <div class="col-xl-8 col-lg-7">
+
+      <!-- Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-4">
+          <div class="card border-0 shadow-sm rounded-4 text-center py-3">
+            <div class="h3 fw-bold text-success mb-0" id="statAvailable">0</div>
+            <div class="text-muted small">Available</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card border-0 shadow-sm rounded-4 text-center py-3">
+            <div class="h3 fw-bold text-warning mb-0" id="statBooked">0</div>
+            <div class="text-muted small">Booked</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card border-0 shadow-sm rounded-4 text-center py-3">
+            <div class="h3 fw-bold text-primary mb-0" id="statCompleted">0</div>
+            <div class="text-muted small">Completed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-calendar3 text-success me-2"></i>My Schedule</h5>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div id="calendar"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD SKILL MODAL -->
+<div class="modal fade" id="skillModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-tags text-success me-2"></i>Add Skills</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="skillModalError" class="alert alert-danger d-none"></div>
+
+        <!-- Search filter -->
+        <div class="input-group mb-2">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="skillSearch"
+                 placeholder="Filter skills…" autocomplete="off" />
+        </div>
+
+        <!-- Select / Deselect all -->
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label fw-semibold small mb-0">Available Skills</label>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-link btn-sm p-0 text-success" id="selectAllSkills">Select all</button>
+            <span class="text-muted small">|</span>
+            <button type="button" class="btn btn-link btn-sm p-0 text-muted" id="deselectAllSkills">Deselect all</button>
+          </div>
+        </div>
+
+        <!-- Checkbox list -->
+        <div id="skillCheckboxList"
+             style="max-height:220px;overflow-y:auto;border:1px solid #dee2e6;border-radius:8px;padding:8px 12px">
+          <div class="text-muted small text-center py-3" id="skillCheckboxEmpty">Loading…</div>
+        </div>
+
+        <div class="text-center text-muted small my-3">— or create a new skill —</div>
+        <label class="form-label fw-semibold small">New Skill Name</label>
+        <input type="text" class="form-control" id="newSkillName"
+               placeholder="e.g. Kubernetes" maxlength="100" />
+      </div>
+      <div class="modal-footer border-0 pt-0 d-flex justify-content-between align-items-center">
+        <span class="text-muted small" id="skillSelectedCount">0 selected</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="saveSkillBtn">
+            <span id="saveSkillSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+            <i class="bi bi-plus-lg me-1"></i>Add Selected
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLOT DETAIL / DECLINE MODAL -->
+<div class="modal fade" id="slotDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-event text-success me-2"></i>Slot / Interview Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="slotDetailContent"></div>
+      <div class="modal-footer border-0 pt-0 d-flex justify-content-between" id="slotDetailFooter">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <div class="d-flex gap-2" id="slotDetailActions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DECLINE REASON MODAL -->
+<div class="modal fade" id="declineModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>Decline Interview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="declineError" class="alert alert-danger d-none"></div>
+        <label class="form-label fw-semibold small">Reason for declining <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="declineReason" rows="3"
+                  placeholder="Please provide a reason..." maxlength="500"></textarea>
+        <input type="hidden" id="declineInterviewId" />
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="submitDeclineBtn">
+          <span id="declineSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Decline Interview
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK / COMPLETE MODAL -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-star text-warning me-2"></i>Complete Interview &amp; Submit Feedback</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="feedbackError" class="alert alert-danger d-none"></div>
+        <input type="hidden" id="feedbackInterviewId" />
+        <p class="text-muted small mb-3">Mark the interview as completed and optionally leave feedback for the recruiter.</p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Candidate Rating <span class="text-danger">*</span></label>
+          <div class="d-flex gap-2" id="starRating">
+            <button type="button" class="btn btn-outline-warning star-btn" data-val="1"><i class="bi bi-star"></i> 1</button>
+            <button type="button" class="btn btn-outline-warning star-btn" data-val="2"><i class="bi bi-star"></i> 2</button>
+            <button type="button" class="btn btn-outline-warning star-btn" data-val="3"><i class="bi bi-star"></i> 3</button>
+            <button type="button" class="btn btn-outline-warning star-btn" data-val="4"><i class="bi bi-star"></i> 4</button>
+            <button type="button" class="btn btn-outline-warning star-btn" data-val="5"><i class="bi bi-star"></i> 5</button>
+          </div>
+          <input type="hidden" id="feedbackRating" value="0" />
+          <div class="form-text">1 = Poor &nbsp;&bull;&nbsp; 3 = Average &nbsp;&bull;&nbsp; 5 = Excellent</div>
+        </div>
+        <div class="mb-1">
+          <label class="form-label fw-semibold small">Notes <span class="text-muted">(optional)</span></label>
+          <textarea class="form-control" id="feedbackNotes" rows="4"
+                    placeholder="Overall impression, technical skills, communication..." maxlength="2000"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="submitFeedbackBtn">
+          <span id="feedbackSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          <i class="bi bi-check-circle me-1"></i>Complete &amp; Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/interviewer.js"></script>
+</body>
+</html>

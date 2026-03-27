@@ -1,0 +1,32 @@
+# Build output
+build/
+*.exe
+*.o
+*.a
+*.obj
+*.lib
+*.pdb
+
+# Database files (contain user data)
+*.db
+*.db-shm
+*.db-wal
+
+# Logs (runtime output)
+*.log
+
+# Email credentials
+smtp_config.json
+
+# Packaging artifacts
+InterviewScheduler_Portable/
+InterviewScheduler_Portable.zip
+*_Release/
+*.zip
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.user
+.vs/
+.vscode/
