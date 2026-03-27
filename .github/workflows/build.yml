@@ -1,0 +1,144 @@
+# ============================================================
+#  GitHub Actions CI/CD Pipeline
+#  Triggers: every push to main, every pull request to main
+#
+#  What it does:
+#    1. Builds recruitment_tracker.exe using MinGW + CMake
+#    2. Runs all 70 GTests — fails the build if any test fails
+#    3. Packages exe + frontend + start scripts into a zip
+#    4. Uploads the zip as a downloadable artifact (every push)
+#    5. On version tags (v*.*.*) — creates a GitHub Release
+#       with the zip attached automatically
+#
+#  Download the latest build:
+#    GitHub repo → Actions → latest run → Artifacts → RecruitmentTracker-dist
+# ============================================================
+
+name: Build & Package
+
+on:
+  push:
+    branches: [ main ]
+    tags:     [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # ── 1. Checkout source ──────────────────────────────────
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ── 2. Install MSYS2 + MinGW64 toolchain ───────────────
+    - name: Install MSYS2 / MinGW64
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          make
+
+    # ── 3. Configure with CMake ─────────────────────────────
+    - name: CMake Configure
+      shell: msys2 {0}
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. \
+          -G "MinGW Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_TESTS=ON
+
+    # ── 4. Build ────────────────────────────────────────────
+    - name: Build
+      shell: msys2 {0}
+      run: |
+        cd build
+        mingw32-make -j4 recruitment_tracker rt_tests
+
+    # ── 5. Run tests ────────────────────────────────────────
+    - name: Run Tests
+      shell: msys2 {0}
+      run: |
+        cd build
+        ./rt_tests.exe --gtest_output=xml:test_results.xml
+
+    # ── 6. Upload test results (always, even on failure) ────
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: build/test_results.xml
+
+    # ── 7. Package dist zip ─────────────────────────────────
+    - name: Package
+      shell: pwsh
+      run: |
+        $dist = "RecruitmentTracker-dist"
+        New-Item -ItemType Directory -Path $dist | Out-Null
+
+        # Executable
+        Copy-Item "build\recruitment_tracker.exe" $dist\
+
+        # Frontend
+        Copy-Item -Recurse "frontend" $dist\
+
+        # Launch scripts
+        Copy-Item "start.ps1"  $dist\
+        Copy-Item "setup.bat"  $dist\ -ErrorAction SilentlyContinue
+
+        # Launcher bat that works by double-click
+        @"
+@echo off
+set LOG_LEVEL=INFO
+echo Starting Interview Scheduler...
+echo Open: http://localhost:8080
+echo Logs: app.log
+.\recruitment_tracker.exe 2>>app.log
+pause
+"@ | Set-Content "$dist\START.bat"
+
+        # Version file
+        $version = if ("${{ github.ref }}" -match "refs/tags/(.+)") { $Matches[1] } else { "dev-${{ github.sha }}".Substring(0,12) }
+        "Version: $version`nBuild: ${{ github.run_number }}`nDate: $(Get-Date -Format 'yyyy-MM-dd')" | Set-Content "$dist\VERSION.txt"
+
+        # Zip it
+        Compress-Archive -Path $dist -DestinationPath "RecruitmentTracker-$version.zip"
+        Write-Host "Packaged: RecruitmentTracker-$version.zip"
+
+    # ── 8. Upload artifact (every push) ────────────────────
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RecruitmentTracker-dist
+        path: "RecruitmentTracker-*.zip"
+        retention-days: 30
+
+    # ── 9. Create GitHub Release (only on version tags) ─────
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: "RecruitmentTracker-*.zip"
+        generate_release_notes: true
+        body: |
+          ## RecruitmentTracker ${{ github.ref_name }}
+
+          ### What's included
+          - `recruitment_tracker.exe` — self-contained server (no install needed)
+          - `frontend/` — web UI
+          - `START.bat` — double-click to run, logs go to `app.log`
+          - `start.ps1` — PowerShell launcher with live color-coded log tail
+
+          ### Quick start
+          1. Extract the zip
+          2. Double-click `START.bat`
+          3. Open http://localhost:8080
+          4. Login: `admin` / `admin123`
