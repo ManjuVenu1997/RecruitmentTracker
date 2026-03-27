@@ -84,32 +84,20 @@ jobs:
         $dist = "RecruitmentTracker-dist"
         New-Item -ItemType Directory -Path $dist | Out-Null
 
-        # Executable
         Copy-Item "build\recruitment_tracker.exe" $dist\
-
-        # Frontend
         Copy-Item -Recurse "frontend" $dist\
+        Copy-Item "start.ps1" $dist\
+        if (Test-Path "setup.bat") { Copy-Item "setup.bat" $dist\ }
 
-        # Launch scripts
-        Copy-Item "start.ps1"  $dist\
-        Copy-Item "setup.bat"  $dist\ -ErrorAction SilentlyContinue
+        $batLines = '@echo off', 'set LOG_LEVEL=INFO', 'echo Starting Interview Scheduler...', 'echo Open: http://localhost:8080', 'echo Logs: app.log', '.\recruitment_tracker.exe 2>>app.log', 'pause'
+        $batLines | Set-Content "$dist\START.bat"
 
-        # Launcher bat that works by double-click
-        @"
-@echo off
-set LOG_LEVEL=INFO
-echo Starting Interview Scheduler...
-echo Open: http://localhost:8080
-echo Logs: app.log
-.\recruitment_tracker.exe 2>>app.log
-pause
-"@ | Set-Content "$dist\START.bat"
+        $ref = "${{ github.ref }}"
+        $sha = "${{ github.sha }}"
+        $run = "${{ github.run_number }}"
+        $version = if ($ref -match "refs/tags/(.+)") { $Matches[1] } else { "dev-" + $sha.Substring(0,7) }
+        "Version: $version", "Build: $run", "Date: $(Get-Date -Format 'yyyy-MM-dd')" | Set-Content "$dist\VERSION.txt"
 
-        # Version file
-        $version = if ("${{ github.ref }}" -match "refs/tags/(.+)") { $Matches[1] } else { "dev-${{ github.sha }}".Substring(0,12) }
-        "Version: $version`nBuild: ${{ github.run_number }}`nDate: $(Get-Date -Format 'yyyy-MM-dd')" | Set-Content "$dist\VERSION.txt"
-
-        # Zip it
         Compress-Archive -Path $dist -DestinationPath "RecruitmentTracker-$version.zip"
         Write-Host "Packaged: RecruitmentTracker-$version.zip"
 
