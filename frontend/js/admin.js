@@ -452,4 +452,26 @@
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  // ── CSV Export (authenticated download) ───
+  async function downloadCsv(endpoint, filename) {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api' + endpoint, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) { showToast('Export failed — ' + res.status, 'danger'); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }
+
+  document.getElementById('exportUtilBtn').addEventListener('click', () =>
+    downloadCsv('/admin/export/utilization', 'utilization.csv'));
+
+  document.getElementById('exportInterviewsBtn').addEventListener('click', () =>
+    downloadCsv('/admin/export/interviews', 'interviews.csv'));
+
 })();
